@@ -414,7 +414,7 @@ class Attack(pg.sprite.Sprite):
 
         w, h = self.DATA[atk_type]["size"]
         self.image = pg.Surface((w, h), pg.SRCALPHA)
-        self.image.fill((255, 0, 0, 120))
+        self.image.fill((0, 0, 0, 0))
 
         self.rect = self.image.get_rect()
         offset_x = 70 if fighter.facing == 1 else -70
@@ -591,13 +591,20 @@ class HUD:
 
     def draw_bottom_controls(self, screen, p1_keys_text, p2_keys_text):
         """画面下部に操作説明を表示"""
-        rect = pg.Rect(0, HEIGHT - 40, WIDTH, 40)
+        rect = pg.Rect(0, HEIGHT - 60, WIDTH, 60)  # 高さを40→60に変更
         pg.draw.rect(screen, (40, 40, 40), rect)
-        left = FONT_SMALL.render(p1_keys_text, True, (220, 220, 220))
-        right = FONT_SMALL.render(p2_keys_text, True, (220, 220, 220))
-        screen.blit(left, (10, HEIGHT - 32))
-        screen.blit(right, (WIDTH - 10 - right.get_width(), HEIGHT - 32))
-
+        
+        # P1の操作説明を2行に分割
+        p1_line1 = FONT_SMALL.render("P1: A/D=移動 W=ジャンプ S=しゃがみ", True, (220, 220, 220))
+        p1_line2 = FONT_SMALL.render("C=パンチ V=キック G=手裏剣 H=螺旋丸 T=投げ", True, (220, 220, 220))
+        screen.blit(p1_line1, (10, HEIGHT - 55))
+        screen.blit(p1_line2, (10, HEIGHT - 35))
+        
+        # P2の操作説明を2行に分割
+        p2_line1 = FONT_SMALL.render("P2: ←/→=移動 ↑=ジャンプ ↓=しゃがみ", True, (220, 220, 220))
+        p2_line2 = FONT_SMALL.render(".=パンチ /=キック :=手裏剣 ;=螺旋丸 ]=投げ", True, (220, 220, 220))
+        screen.blit(p2_line1, (WIDTH - 10 - p2_line1.get_width(), HEIGHT - 55))
+        screen.blit(p2_line2, (WIDTH - 10 - p2_line2.get_width(), HEIGHT - 35))
 
 # =====================
 # ポーズメニュー
@@ -719,7 +726,7 @@ def draw_title():
     overlay.fill((0, 0, 0))
     screen.blit(overlay, (0, 0))
 
-    title = FONT_BIG.render("こうかとん ファイター", True, (255, 255, 255))
+    title = FONT_BIG.render("コウカファイター", True, (255, 255, 255))
     guide = FONT_MED.render("ENTERキーでスタート", True, (230, 230, 230))
 
     screen.blit(title, (WIDTH // 2 - title.get_width() // 2, 220))
@@ -1047,15 +1054,21 @@ def main() -> None:
 
             # 勝利判定
             if hud.match_time <= 0 or p1.hp <= 0 or p2.hp <= 0:
+                # 勝者判定
                 if p1.hp > p2.hp:
+                    winner = "P1"
                     hud.p1_wins += 1
                 elif p2.hp > p1.hp:
+                    winner = "P2"
                     hud.p2_wins += 1
+                else:
+                    winner = "Draw"
 
-                result_text = (FONT_BIG.render("K.O.", True, (255, 255, 0))
-                               if (p1.hp <= 0 or p2.hp <= 0)
-                               else FONT_BIG.render("Time Up", True, (255, 255, 0)))
+                # 表示
+                result_text = FONT_BIG.render("K.O." if (p1.hp <= 0 or p2.hp <= 0) else "Time Up", True, (255, 255, 0))
                 screen.blit(result_text, (WIDTH // 2 - result_text.get_width() // 2, HEIGHT // 2 - 40))
+                winner_text = FONT_MED.render(f"Winner: {winner}", True, (255, 255, 255))
+                screen.blit(winner_text, (WIDTH // 2 - winner_text.get_width() // 2, HEIGHT // 2 + 30))
                 pg.display.update()
                 pg.time.delay(2000)
 
