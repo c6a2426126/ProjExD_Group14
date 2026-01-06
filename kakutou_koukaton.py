@@ -208,6 +208,17 @@ class Fighter(pg.sprite.Sprite):
             self.kick_r = pg.Surface((190, 200), pg.SRCALPHA)
             self.kick_r.fill((100, 255, 100, 255))
         self.kick_l = pg.transform.flip(self.kick_r, True, False)
+        
+        try:
+            self.crouch_r = pg.transform.scale(
+                pg.image.load(f"fig/{char_name}fighter_crouch.png").convert_alpha(),
+                (110, 150)
+            )
+        except:
+            self.crouch_r = pg.Surface((150, 140), pg.SRCALPHA)
+            self.crouch_r.fill((100, 100, 255, 255))
+
+        self.crouch_l = pg.transform.flip(self.crouch_r, True, False)
 
         self.image = self.idle_r
         self.rect = self.image.get_rect()
@@ -300,12 +311,13 @@ class Fighter(pg.sprite.Sprite):
         # しゃがみ処理
         # =====================
         if key_lst[self.keys["down"]] and self.on_ground and can_move:
-            self.is_crouching = True
-            # しゃがみ画像（簡易的に高さを変更）
-            old_bottom = self.rect.bottom
-            self.image = pg.Surface((60, 70), pg.SRCALPHA)
-            self.image.fill((100, 100, 100, 200))
-            self.rect = self.image.get_rect(midbottom=(self.rect.centerx, old_bottom))
+            if not self.is_crouching:
+                self.is_crouching = True
+                old_bottom = self.rect.bottom
+                self.image = self.crouch_r if self.facing == 1 else self.crouch_l
+                self.rect = self.image.get_rect(
+                    midbottom=(self.rect.centerx, old_bottom)
+                )
         else:
             if self.is_crouching:
                 self.is_crouching = False
@@ -967,7 +979,7 @@ def main() -> None:
 
                     # 防御中は軽減
                     if f.is_guarding:
-                        damage = damage // 2
+                        damage = damage // 3
 
                     if atk.rect.colliderect(f.hurtbox):
                         hit = True
@@ -986,7 +998,7 @@ def main() -> None:
                     if f != proj.owner and proj.hitbox.colliderect(f.hurtbox):
                         damage = proj.damage
                         if f.is_guarding:
-                            damage = damage // 2
+                            damage = damage // 3
                         f.hp -= damage
                         apply_knockback(f, proj.owner, damage)
                         proj.kill()
